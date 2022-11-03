@@ -70,7 +70,7 @@ def gera_carater_aleatorio(g, n):
 def cria_coordenada(col, lin):
     if not isinstance(col, str) or not isinstance(lin, int):
         raise ValueError('cria_coordenada: argumentos invalidos')
-    if not lin in range(1, 99) or not col.isupper():
+    if not lin in range(1, 100) or not col.isupper():
         raise ValueError('cria_coordenada: argumentos invalidos')
     return (col,lin)
 
@@ -83,13 +83,53 @@ def obtem_linha(c):
 def eh_coordenada(c):
     if type(c) != tuple:
         return False
-    elif type(c[0]) != str or type(c[1]) not in range(1,99):
+    elif c[0] not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' or c[1] not in range(1,100):
         return False
     else:
         return True
 
+def coordenadas_iguais(c1, c2):
+    if c1[0] == c2[0] and c1[1] == c2[1]:
+        return True
+    else:
+        return False
 
-g2 = cria_gerador(64, 1)
-[atualiza_estado(g2) for n in range(5)]
+def coordenada_para_str(c):
+    if c[1] < 10:
+        return str(c[0]) + '0' + str(c[1])
+    else:
+        return str(c[0]) + str(c[1])
 
-print(gera_carater_aleatorio(g2, 'Z'))
+def str_para_coordenada(s):
+    g = []
+    if len(s) == 2:
+        g.append(s[0])
+        g.append(s[1])
+    if len(s) == 3:
+        g.append(s[0])
+        g.append(s[1:])
+    return tuple(g)
+
+
+
+
+def obtem_coordenadas_vizinhas(c):
+    viz = []
+    x = [-1, 0, 1, 1, 1, 0, -1, -1]
+    y = [-1, -1, -1, 0, 1, 1, 1, 0]
+    for i in range(8):
+        cTemp = list(c)
+        cTemp[0] = chr(ord(cTemp[0]) + x[i])
+        cTemp[1] = cTemp[1] + y[i]
+        if eh_coordenada(tuple(cTemp)):
+            viz.append(tuple(cTemp))
+    return tuple(viz)
+
+def obtem_coordenada_aleatoria(c, g):
+    return [gera_carater_aleatorio(g, c[0]), gera_numero_aleatorio(g, c[1])]
+
+
+
+g1 = cria_gerador(32, 1)
+c3 = cria_coordenada('Z', 99)
+print(obtem_coordenada_aleatoria(c3, g1))
