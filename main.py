@@ -365,6 +365,7 @@ for l in 'AD': limpa_parcela(obtem_parcela(m, cria_coordenada(l, 2)))
 for l in 'ABCDE': limpa_parcela(obtem_parcela(m, cria_coordenada(l, 3)))
 
 alterna_bandeira(obtem_parcela(m, cria_coordenada('D', 4)))
+print('cock')
 esconde_mina(obtem_parcela(m,('D',1)))
 print(obtem_parcela(m, ('D',1)))
 print(eh_parcela_minada(obtem_parcela(m, ('D',1))))
