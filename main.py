@@ -1,3 +1,5 @@
+alf = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
 #TAD gerador
 
 def cria_gerador(b, s):
@@ -68,7 +70,7 @@ def gera_carater_aleatorio(g, n):
 
 #TAD coordenada
 def cria_coordenada(col, lin):
-    if not isinstance(col, str) or not isinstance(lin, int):
+    if col not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' or not isinstance(lin, int):
         raise ValueError('cria_coordenada: argumentos invalidos')
     if not lin in range(1, 100) or not col.isupper():
         raise ValueError('cria_coordenada: argumentos invalidos')
@@ -202,6 +204,8 @@ def alterna_bandeira(p):
         return True
     return False
 
+#TAD CAMPO
+
 def cria_campo(c, l):
     if not isinstance(c, str) or not isinstance(l, int):
         return ValueError('cria_campo: argumentos invalidos')
@@ -210,126 +214,160 @@ def cria_campo(c, l):
     if l not in range(1, 100):
         return ValueError('cria_campo: argumentos invalidos')
     alf = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    campo = {alf[i]:[] for i in range(alf.index(c)+1)}
-    for i in range(len(campo)):
-        for j in range(1,l+1):
-            campo[list(campo.keys())[i]].append(cria_parcela())
+    campo = []
+    i = 0
+    campoFinal = []
+    for i in range(l):
+        campo += [[cria_parcela() for j in range(alf.index(c)+1)]]
+
+
     return campo
 
 def copia_campo(m):
     return m.copy()
 
 def obtem_ultima_coluna(m):
-    return list(m.values())[-1]
+    return alf[(len(m[-1]) - 1)]
 
 def obtem_ultima_linha(m):
-    return list(m[i][-1] for i in m.keys())
+    return len(m)
 
 def obtem_parcela(m,c):
-    return m[c[0]][c[1]-1]
+    return m[obtem_linha(c) - 1][alf.index(obtem_coluna(c))]
 
-def obtem_coordenadas(m,s):
+def obtem_coordenadas(m, s):
+    coords = []
     if s == 'limpas':
-        q = '?'
-    if s == 'tapadas':
-        q = '#'
-    if s == 'marcadas':
-        q = '@'
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                if eh_parcela_limpa(m[i][j]):
+                    coords.append((alf[j], i + 1))
+    if s == 'tapada':
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                if eh_parcela_tapada(m[i][j]):
+                    coords.append((alf[j], i+1))
+    if s == 'marcada':
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                if eh_parcela_marcada(m[i][j]):
+                    coords.append((alf[j], i+1))
     if s == 'minadas':
-        q = True
-    coord = []
-    if q in '?#Q':
-        for i,j in m.items():
-            for k in range(len(j)):
-                if j[k][0] == q:
-                    coord.append([i, k+1])
-    if q == True:
-        for i,j in m.items():
-            for k in range(len(j)):
-                if j[k][1] == q:
-                    coord.append([i, k+1])
-    return tuple(coord)
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                if eh_parcela_minada(m[i][j]):
+                    coords.append((alf[j], i+1))
+    return tuple(coords)
 
-def obtem_numero_minas_vizinhas(m,c):
-    viz = list(obtem_coordenadas_vizinhas(c))
-    i = 0
-    while i < len(viz):
-        if viz[i][0] not in list(m.keys()) or viz[i][1] not in range(1,len(m[list(m.keys())[0]])+1):
-            viz.remove(viz[i])
-        else:
-            i += 1
+def obtem_numero_minas_vizinhas(m, c):
     minas = 0
-    for i in range(len(viz)):
-        if m[viz[i][0]][viz[i][1]-1] == True:
+    for i in obtem_coordenadas_vizinhas(c):
+        if eh_coordenada_do_campo(m,i ) and eh_parcela_minada(obtem_parcela(m, i)) :
             minas += 1
+
     return minas
 
-def eh_campo(c):
-    if not isinstance(c, dict):
+
+def eh_campo(m):
+    if not isinstance(m, list):
         return False
-    for k,v in c.values():
-        if not isinstance(k, str) or not isinstance(v, list):
+    for i in m:
+        if not isinstance(i,list):
             return False
+        for j in i:
+            if not eh_parcela(j):
+                return False
     else:
         return True
 
-def eh_coordenada_do_campo(m,c):
-    if c[0] in list(m.keys()) and c[1] in range(1, len(m[list(m.keys())[0]]) + 1):
-        return True
-    else:
+def eh_coordenada_do_campo(m, c):
+    if c[0] not in alf[:alf.index(obtem_ultima_coluna(m))] or c[1] not in range(obtem_ultima_linha(m)):
         return False
+    else:
+        return True
 
-def eh_campos_iguais(m1, m2):
-    if m1.items() == m2.items():
-        return True
-    else:
+def campos_iguais(m1,m2):
+    if len(m1) != len(m2):
         return False
+    if not isinstance(m1, list) or not isinstance(m2, list):
+        return False
+    for i in range(len(m1)):
+        if not isinstance(m1[i], list) or not isinstance(m2[i], list):
+            return False
+        if m1[i] != m2[i]:
+            return False
+        for k in range(m1[i]):
+            if m1[i][k] != m[i][k]:
+                return False
+    return True
 
 def campo_para_str(m):
     campo = '   '
-    for i in range(len(m.keys())):
-        campo += str(list(m.keys())[i])
+    for i in range(alf.index(obtem_ultima_coluna(m))+1):
+        campo += alf[i]
     campo += '\n  +'
-    for i in range(len(m.keys())):
+    for i in range(alf.index(obtem_ultima_coluna(m))+1):
         campo += '-'
     campo += '+'
 
-    for i in range(len(m[list(m.keys())[0]])): #RANGE LINHAS
-        campo += '\n0' + str(i+1) + '|'
-        for j in range(len(list(m.keys()))):
-
-            campo += str(m[list(m.keys())[j]][i][0])
+    for i in range(obtem_ultima_linha(m)):  # N LINHAS
+        if i + 1 < 10:
+            campo += '\n0' + str(i + 1) + '|'
+        elif i + 1 >= 10:
+            campo += '\n' + str(i + 1) + '|'
+        for j in range(len(m[i])):
+            if parcela_para_str(m[i][j]) == '?':
+                if obtem_numero_minas_vizinhas(m, (str(alf[j]), i + 1)) == 0:
+                    campo += ' '
+                elif obtem_numero_minas_vizinhas(m, (alf[j],i +1 )) != 0:
+                    campo += str(obtem_numero_minas_vizinhas(m, (alf[j],i +1 )))
+            else:
+                campo += parcela_para_str(m[i][j])
         campo += '|'
 
     campo += '\n  +'
-    for i in range(len(m.keys())):
+    for i in range(alf.index(obtem_ultima_coluna(m))+1):
         campo += '-'
     campo += '+'
     return campo
 
 def coloca_minas(m, c, g, n):
-    return
+    coordsOcupados = []
+    while len(obtem_coordenadas(m, 'minadas')) < n:
+        coordAleatoria = obtem_coordenada_aleatoria(((obtem_ultima_coluna(m), obtem_ultima_linha(m))), g)
+        if coordAleatoria not in obtem_coordenadas_vizinhas(c) or coordAleatoria != c or coordAleatoria not in coordsOcupados:
+            m[obtem_linha(coordAleatoria)][obtem_coluna(coordAleatoria)][1] = True
+            coordsOcupados += coordAleatoria
+    return m
 
-'''def limpa_campo(m,c):
-    if m[c[0]][c[1]-1][0] == '?':
+def limpa_campo(m, c):
+    p = obtem_parcela(m,c)
+    if eh_parcela_limpa(p):
         return m
-    elif m[c[0]][c[1]-1][0] == '#':
-        limpa_parcela(m[c[0]][c[1]-1])
+    limpa_parcela(p)
+    if parcela_para_str(p) == 'X':
+        return m
     if obtem_numero_minas_vizinhas(m,c) == 0:
-        for i in range(len(obtem_coordenadas_vizinhas(c))):
-            limpa_parcela(m[obtem_coordenadas_vizinhas(c)[i][0]][obtem_coordenadas_vizinhas(c)[i][1]])
+        for i in obtem_coordenadas_vizinhas(c):
+            if eh_coordenada_do_campo(m, i) and eh_parcela_tapada(obtem_parcela(m,i)):
+                limpa_parcela(obtem_parcela(m,i))
+            else:
+                limpa_campo(m,i)
+    return m
 
 
+m = cria_campo('E', 5)
 
-        return m'''
+for l in 'ABC': esconde_mina(obtem_parcela(m, cria_coordenada(l, 1)))
+for l in 'BC': esconde_mina(obtem_parcela(m, cria_coordenada(l, 2)))
+for l in 'DE': limpa_parcela(obtem_parcela(m, cria_coordenada(l, 1)))
+for l in 'AD': limpa_parcela(obtem_parcela(m, cria_coordenada(l, 2)))
+for l in 'ABCDE': limpa_parcela(obtem_parcela(m, cria_coordenada(l, 3)))
 
-m = cria_campo('E',5)
-
-for l in 'ABC':esconde_mina(obtem_parcela(m, cria_coordenada(l,1)))
-for l in 'BC':esconde_mina(obtem_parcela(m, cria_coordenada(l,2)))
-for l in 'DE':limpa_parcela(obtem_parcela(m, cria_coordenada(l,1)))
-for l in 'AD':limpa_parcela(obtem_parcela(m, cria_coordenada(l,2)))
-for l in 'ABCDE':limpa_parcela(obtem_parcela(m, cria_coordenada(l,3)))
-
-alterna_bandeira(obtem_parcela(m, cria_coordenada('D',4)))
+alterna_bandeira(obtem_parcela(m, cria_coordenada('D', 4)))
+esconde_mina(obtem_parcela(m,('D',1)))
+print(obtem_parcela(m, ('D',1)))
+print(eh_parcela_minada(obtem_parcela(m, ('D',1))))
+print(eh_coordenada_do_campo(m,('D', 1)))
+print(obtem_numero_minas_vizinhas(m, ('D', 1)))
 print(campo_para_str(m))
